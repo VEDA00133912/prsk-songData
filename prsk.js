@@ -1,35 +1,40 @@
 (function() {
   const parseCell = (cell) => {
     const text = cell.textContent.trim();
-    return text === '-' ? null : Number(text);
+    if (text === '-' || text === '') return null;
+    if (text.endsWith('+')) {
+      return Number(text.replace('+', '')) + 0.5;
+    }
+    return Number(text);
   };
 
-  const songs = [...document.querySelectorAll('tr')]
-    .map(row => {
-      const link = row.querySelector('a.a-link');
-      const tds = [...row.querySelectorAll('td.center')];
-      if (!link || tds.length < 6) return null;
+  let songs = [...document.querySelectorAll('tbody tr')].map(row => {
+    const tds = row.querySelectorAll('td');
+    const link = tds[3]?.querySelector('a');
+    if (!link) return null;
 
-      return {
-        name: link.textContent.trim(),
-        EASY:   parseCell(tds[0]),
-        NORMAL: parseCell(tds[1]),
-        HARD:   parseCell(tds[2]),
-        EXPERT: parseCell(tds[3]),
-        MASTER: parseCell(tds[4]),
-        APPEND: parseCell(tds[5])
-      };
-    })
-    .filter(Boolean)
-    .slice(1); // ミク, ルカ, MEIKO, KAITOのデータが入っちゃうので削除してます
+    return {
+      number: Number(tds[0]?.textContent.trim()), // 確認のために曲番号を追加
+      name: link.textContent.trim(),
+      EASY:   parseCell(tds[5]),
+      NORMAL: parseCell(tds[6]),
+      HARD:   parseCell(tds[7]),
+      EXPERT: parseCell(tds[8]),
+      MASTER: parseCell(tds[9]),
+      APPEND: parseCell(tds[10])
+    };
+  }).filter(Boolean);
+
+  songs = songs.slice(2);
 
   const blob = new Blob([JSON.stringify(songs, null, 2)], { type: 'application/json' });
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob),
-    download: 'prsk-songs.json'
+    download: 'songs.json'
   });
   document.body.appendChild(a);
   a.click();
   a.remove();
-  console.log('ダウンロードしました');
+
+  console.log('songs.jsonをダウンロードしました');
 })();
